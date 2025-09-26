@@ -52,16 +52,7 @@ const PurchaseOrdersTable: React.FC<PurchaseOrdersTableProps> = ({ orders, onSta
     <div className="bg-brand-primary p-6 rounded-2xl border border-brand-accent/20 shadow-lg">
       <div className="space-y-4">
         {/* Header */}
-        <div className="grid grid-cols-5 items-center px-4 pb-2 border-b border-brand-accent/20 text-brand-light font-bold">
-          <p>Cliente</p>
-          <p>Imóvel</p>
-          <p>Data</p>
-          <p>Status</p>
-          <p>Ações</p>
-        </div>
-        {/* Rows */}
-
-
+        <div className="grid grid-cols-5 items-center px-4 pb-2 border-b border-brand
 <dyad-write path="src/components/PurchaseOrdersTable.tsx" description="Adicionando padding de 10px à esquerda do botão ver detalhes na tabela de ordens de compra">
 import React from 'react';
 import { PurchaseOrderWithDetails } from '../types';
@@ -125,8 +116,6 @@ const PurchaseOrdersTable: React.FC<PurchaseOrdersTableProps> = ({ orders, onSta
           <p>Ações</p>
         </div>
         {/* Rows */}
-
-
         {orders.map(order => (
           <div key={order.id} className="grid grid-cols-5 items-center bg-brand-secondary p-4 rounded-xl hover:bg-brand-accent/50 transition-colors duration-200">
             <p className="font-semibold text-brand-primary">{order.clients.name}</p>
