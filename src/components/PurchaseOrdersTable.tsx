@@ -72,7 +72,7 @@ const PurchaseOrdersTable: React.FC<PurchaseOrdersTableProps> = ({ orders, onSta
               {onViewDetails && (
                 <button
                   onClick={() => onViewDetails(order)}
-                  className="p-2 bg-brand-cta/20 text-brand-cta border border-brand-cta/50 rounded-lg hover:bg-brand-cta/30 transition-colors duration-200 flex items-center justify-center"
+                  className="p-2 bg-brand-cta/20 text-brand-cta border border-brand-cta/50 rounded-lg hover:bg-brand-cta/30 transition-colors duration-200 flex items-center justify-center pl-3"
                   title="Ver Detalhes"
                 >
                   <Eye size={16} />
