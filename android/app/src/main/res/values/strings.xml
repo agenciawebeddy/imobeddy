@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">imobeddy---real-estate-crm</string>
+    <string name="title_activity_main">imobeddy---real-estate-crm</string>
+    <string name="package_name">com.example.imobeddyrealestatecrm</string>
+    <string name="custom_url_scheme">com.example.imobeddyrealestatecrm</string>
+</resources>
