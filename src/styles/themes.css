@@ -1,0 +1,139 @@
+/* Tema Escuro (Padrão) */
+:root,
+:root.dark {
+  --brand-primary: #0f172a;
+  --brand-secondary: #1e293b;
+  --brand-accent: #334155;
+  --brand-light: #94a3b8;
+  --brand-lighter: #e2e8f0;
+  --brand-cta: #0ea5e9;
+  --brand-success: #10b981;
+  --brand-warning: #f59e0b;
+  --brand-error: #ef4444;
+  --brand-text: #f8fafc;
+  --brand-text-secondary: #cbd5e1;
+  --brand-border: #475569;
+  --brand-hover: #475569;
+  --brand-card-bg: #1e293b;
+  --brand-input-bg: #334155;
+  --brand-title: #f8fafc;
+  --brand-subtitle: #cbd5e1;
+}
+
+/* Tema Claro */
+:root.light {
+  --brand-primary: #ffffff;
+  --brand-secondary: #f8fafc;
+  --brand-accent: #e2e8f0;
+  --brand-light: #64748b;
+  --brand-lighter: #334155;
+  --brand-cta: #0ea5e9;
+  --brand-success: #10b981;
+  --brand-warning: #f59e0b;
+  --brand-error: #ef4444;
+  --brand-text: #0f172a;
+  --brand-text-secondary: #475569;
+  --brand-border: #cbd5e1;
+  --brand-hover: #f1f5f9;
+  --brand-card-bg: #ffffff;
+  --brand-input-bg: #f8fafc;
+  --brand-title: #0f172a;
+  --brand-subtitle: #475569;
+}
+
+/* Classes utilitárias para usar as variáveis CSS */
+.bg-brand-primary { background-color: var(--brand-primary); }
+.bg-brand-secondary { background-color: var(--brand-secondary); }
+.bg-brand-accent { background-color: var(--brand-accent); }
+.bg-brand-card { background-color: var(--brand-card-bg); }
+.bg-brand-input { background-color: var(--brand-input-bg); }
+
+.text-brand-primary { color: var(--brand-title); }
+.text-brand-secondary { color: var(--brand-subtitle); }
+.text-brand-light { color: var(--brand-light); }
+.text-brand-lighter { color: var(--brand-lighter); }
+.text-brand-cta { color: var(--brand-cta); }
+.text-brand-text { color: var(--brand-text); }
+.text-brand-text-secondary { color: var(--brand-text-secondary); }
+
+.border-brand { border-color: var(--brand-border); }
+.border-brand-accent { border-color: var(--brand-accent); }
+
+.hover\:bg-brand-hover:hover { background-color: var(--brand-hover); }
+
+/* Transições suaves para mudança de tema */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Ajustes específicos para o tema claro no dashboard */
+.light .dashboard-card {
+  background: var(--brand-card-bg);
+  border: 1px solid var(--brand-border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.light .dashboard-stat {
+  color: var(--brand-text);
+}
+
+.light .dashboard-stat-label {
+  color: var(--brand-text-secondary);
+}
+
+/* Ajustes para tabelas no tema claro */
+.light .table-header {
+  background-color: var(--brand-secondary);
+  color: var(--brand-text);
+}
+
+.light .table-row {
+  background-color: var(--brand-primary);
+  border-bottom: 1px solid var(--brand-border);
+}
+
+.light .table-row:hover {
+  background-color: var(--brand-hover);
+}
+
+/* Ajustes para modais no tema claro */
+.light .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.light .modal-content {
+  background-color: var(--brand-card-bg);
+  border: 1px solid var(--brand-border);
+}
+
+/* Ajustes para inputs no tema claro */
+.light input,
+.light select,
+.light textarea {
+  background-color: var(--brand-input-bg);
+  border-color: var(--brand-border);
+  color: var(--brand-text);
+}
+
+.light input:focus,
+.light select:focus,
+.light textarea:focus {
+  border-color: var(--brand-cta);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* Ajustes para sidebar no tema claro */
+.light .sidebar {
+  background-color: var(--brand-card-bg);
+  border-right: 1px solid var(--brand-border);
+}
+
+.light .sidebar-item {
+  color: var(--brand-text-secondary);
+}
+
+.light .sidebar-item:hover,
+.light .sidebar-item.active {
+  background-color: var(--brand-hover);
+  color: var(--brand-text);
+}
