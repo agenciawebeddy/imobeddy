@@ -1,44 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
-import { supabase } from './integrations/supabase/client';
-import { Session } from '@supabase/supabase-js';
-import MainLayout from './components/MainLayout';
-import Login from './pages/Login';
+import React from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import Listings from './pages/Listings';
+import Leads from './pages/Leads';
+import Clients from './pages/Clients';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
+import PurchaseOrders from './pages/PurchaseOrders';
+import Login from './pages/Login';
+import { AuthProvider } from './contexts/AuthContext'; // Assuming you have an AuthContext
 
-const App: React.FC = () => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setLoading(false);
-    };
-
-    getSession();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (loading) {
-    return null; // Ou um componente de loading
-  }
-
+function App() {
   return (
     <ThemeProvider>
-      <Router>
-        {!session ? <Login /> : <MainLayout />}
-      </Router>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-bg-primary text-text-primary">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/listings" element={<Listings />} />
+              <Route path="/leads" element={<Leads />} />
+              <Route path="/clients" element={<Clients />} />
+              <Route path="/purchase-orders" element={<PurchaseOrders />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/login" element={<Login />} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
-};
+}
 
 export default App;

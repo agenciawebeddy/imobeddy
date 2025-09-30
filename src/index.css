@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Remove Tailwind CDN script from here - it's handled by PostCSS */
+
+/* Custom CSS Variables for Theme */
+:root {
+  --bg-primary: 0 0% 100%; /* white */
+  --bg-secondary: 0 0% 98%; /* light gray */
+  --text-primary: 0 0% 0%; /* black */
+  --text-secondary: 0 0% 50%; /* gray */
+  --border: 0 0% 80%; /* light border */
+  --accent: 217 91% 60%; /* blue */
+  --success: 142 76% 36%; /* green */
+  --warning: 43 96% 56%; /* yellow */
+  --error: 0 84% 60%; /* red */
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+.dark {
+  --bg-primary: 240 10% 3.9%; /* dark bg */
+  --bg-secondary: 240 10% 3.9%; /* darker bg */
+  --text-primary: 0 0% 98%; /* white */
+  --text-secondary: 0 0% 60%; /* light gray */
+  --border: 0 0% 20%; /* dark border */
+  --accent: 217 91% 60%; /* blue (same for consistency) */
+  --success: 142 76% 36%; /* green (same) */
+  --warning: 43 96% 56%; /* yellow (same) */
+  --error: 0 84% 60%; /* red (same) */
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Base styles using CSS variables */
+body {
+  background-color: hsl(var(--bg-primary));
+  color: hsl(var(--text-primary));
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.container {
+  background-color: hsl(var(--bg-secondary));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--text-primary));
+}
+
+.btn-primary {
+  background-color: hsl(var(--accent));
+  color: hsl(var(--bg-primary));
+}
+
+.btn-success {
+  background-color: hsl(var(--success));
+  color: hsl(var(--bg-primary));
+}
+
+.btn-warning {
+  background-color: hsl(var(--warning));
+  color: hsl(var(--bg-primary));
+}
+
+.btn-error {
+  background-color: hsl(var(--error));
+  color: hsl(var(--bg-primary));
+}
+
+.text-primary {
+  color: hsl(var(--text-primary));
+}
+
+.text-secondary {
+  color: hsl(var(--text-secondary));
+}
+
+.border {
+  border-color: hsl(var(--border));
+}
+
+.shadow {
+  box-shadow: var(--shadow);
+}
+
+/* Dark mode overrides for specific components */
+.dark .bg-primary {
+  background-color: hsl(var(--bg-primary));
+}
+
+.dark .text-primary {
+  color: hsl(var(--text-primary));
+}
+
+/* Ensure smooth transitions */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
