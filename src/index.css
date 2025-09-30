@@ -2,94 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Remove Tailwind CDN script from here - it's handled by PostCSS */
-
-/* Custom CSS Variables for Theme */
+/* Custom CSS Variables for Theme - Enhanced with more granular control */
 :root {
+  /* Light Theme */
   --bg-primary: 0 0% 100%; /* white */
   --bg-secondary: 0 0% 98%; /* light gray */
+  --bg-tertiary: 0 0% 95%; /* lighter gray */
   --text-primary: 0 0% 0%; /* black */
   --text-secondary: 0 0% 50%; /* gray */
+  --text-muted: 0 0% 60%; /* muted gray */
   --border: 0 0% 80%; /* light border */
+  --border-hover: 0 0% 70%; /* hover border */
   --accent: 217 91% 60%; /* blue */
   --success: 142 76% 36%; /* green */
   --warning: 43 96% 56%; /* yellow */
   --error: 0 84% 60%; /* red */
   --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --ring-color: 217 91% 60%; /* blue ring */
+  --focus-ring: 0 0 0 3px hsl(var(--ring-color) / 0.5);
 }
 
 .dark {
-  --bg-primary: 240 10% 3.9%; /* dark bg */
+  /* Dark Theme - Improved contrast and accessibility */
+  --bg-primary: 240 10% 3.9%; /* very dark gray */
   --bg-secondary: 240 10% 3.9%; /* darker bg */
-  --text-primary: 0 0% 98%; /* white */
+  --bg-tertiary: 240 10% 3.9%; /* even darker */
+  --text-primary: 0 0% 98%; /* near white */
   --text-secondary: 0 0% 60%; /* light gray */
+  --text-muted: 0 0% 50%; /* muted light gray */
   --border: 0 0% 20%; /* dark border */
+  --border-hover: 0 0% 30%; /* lighter dark border */
   --accent: 217 91% 60%; /* blue (same for consistency) */
   --success: 142 76% 36%; /* green (same) */
   --warning: 43 96% 56%; /* yellow (same) */
   --error: 0 84% 60%; /* red (same) */
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px<dyad-write path="src/contexts/ThemeContext.tsx">
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
+  toggleTheme: () => void;
+  resolvedTheme: 'light' | 'dark';
 }
 
-/* Base styles using CSS variables */
-body {
-  background-color: hsl(var(--bg-primary));
-  color: hsl(var(--text-primary));
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-.container {
-  background-color: hsl(var(--bg-secondary));
-  border: 1px solid hsl(var(--border));
-  color: hsl(var(--text-primary));
-}
+export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
 
-.btn-primary {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--bg-primary));
-}
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      setResolvedTheme(savedTheme);
+    } else {
+      // If no saved theme, use system preference
+      const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const systemTheme = systemPrefersDark ? 'dark' : 'light';
+      setTheme(systemTheme);
+      setResolvedTheme(systemTheme);
+    }
+  }, []);
 
-.btn-success {
-  background-color: hsl(var(--success));
-  color: hsl(var(--bg-primary));
-}
+  // Apply theme to document
+  useEffect(() => {
+    // Save theme to localStorage
+    localStorage.setItem('theme', theme);
 
-.btn-warning {
-  background-color: hsl(var(--warning));
-  color: hsl(var(--bg-primary));
-}
+    // Apply theme class to root element
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    setResolvedTheme(theme);
+  }, [theme]);
 
-.btn-error {
-  background-color: hsl(var(--error));
-  color: hsl(var(--bg-primary));
-}
+  // Listen to system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+    if (mediaQuery) {
+      const handleChange = (e: MediaQueryListEvent) => {
+        if (localStorage.getItem('theme') === null) { // Only if no user preference saved
+          setTheme(e.matches ? 'dark' : 'light');
+        }
+      };
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
+  }, []);
 
-.text-primary {
-  color: hsl(var(--text-primary));
-}
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  }, []);
 
-.text-secondary {
-  color: hsl(var(--text-secondary));
-}
+  const setThemeDirect = useCallback((newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+  }, []);
 
-.border {
-  border-color: hsl(var(--border));
-}
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme: setThemeDirect, toggleTheme, resolvedTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
-.shadow {
-  box-shadow: var(--shadow);
-}
-
-/* Dark mode overrides for specific components */
-.dark .bg-primary {
-  background-color: hsl(var(--bg-primary));
-}
-
-.dark .text-primary {
-  color: hsl(var(--text-primary));
-}
-
-/* Ensure smooth transitions */
-* {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (context === undefined) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
