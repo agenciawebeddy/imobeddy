@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { LineChart, Users, Handshake, Home, LoaderCircle } from 'lucide-react';
-import { supabase } from '../integrations/supabase/client';
-import { Property } from '../types';
-
-import DashboardCard from '../components/DashboardCard';
-import SalesChart from '../components/SalesChart';
-import RecentActivity from '../components/RecentActivity';
-import PropertyListings from '../components/PropertyListings';
-import ViewPropertyModal from '../components/ViewPropertyModal';
-import CreateSampleDataButton from '../components/CreateSampleDataButton';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import {
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Alert,
+  Box,
+  Chip,
+} from '@mui/material';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
   totalSales: number;
@@ -17,50 +21,112 @@ interface DashboardStats {
   activePropertiesCount: number;
 }
 
+interface Property {
+  id: string;
+  name?: string;
+  address: string;
+  price: number;
+  status: 'À Venda' | 'Pendente' | 'Vendido';
+  beds: number;
+  baths: number;
+  sqft: number;
+  created_at: string;
+}
+
+interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  status: 'New' | 'Contacted' | 'Qualified' | 'Lost';
+  source: string;
+  assignedTo: string;
+  created_at: string;
+}
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  lastContact: string;
+}
+
+interface PurchaseOrder {
+  id: string;
+  status: 'Pendente' | 'Vendido' | 'Cancelado';
+  created_at: string;
+  clients: {
+    id: string;
+    name: string;
+  };
+  properties: {
+    id: string;
+    name?: string | null;
+    address: string;
+    status: 'À Venda' | 'Pendente' | 'Vendido';
+  };
+}
+
 const Dashboard: React.FC = () => {
-  const [recentListings, setRecentListings] = useState<Property[]>([]);
+  const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [listingToView, setListingToView] = useState<Property | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [recentListings, setRecentListings] = useState<Property[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setLoading(true);
-      
-      const [
-        salesData,
-        leadsData,
-        soldPropertiesData,
-        activePropertiesData,
-        recentListingsData
-      ] = await Promise.all([
-        supabase.from('properties').select('price').eq('status', 'Vendido'),
-        supabase.from('leads').select('*', { count: 'exact', head: true }),
-        supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'Vendido'),
-        supabase.from('properties').select('*', { count: 'exact', head: true }).in('status', ['À Venda', 'Pendente']),
-        supabase.from('properties').select('*').order('created_at', { ascending: false }).limit(3)
-      ]);
+      try {
+        const [
+          { data: salesData, error: salesError },
+          { data: leadsData, error: leadsError },
+          { data: soldPropertiesData, error: soldError },
+          { data: activePropertiesData, error: activeError },
+          { data: recentListingsData, error: listingsError },
+          { data: recentActivityData, error: activityError }
+        ] = await Promise.all([
+          supabase.from('properties').select('price').eq('status', 'Vendido'),
+          supabase.from('leads').select('*', { count: 'exact', head: true }),
+          supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'Vendido'),
+          supabase.from('properties').select('*', { count: 'exact', head: true }).in('status', ['À Venda', 'Pendente']),
+          supabase.from('properties').select('*').order('created_at', { ascending: false }).limit(3),
+          supabase.from('purchase_orders').select(`
+            id,
+            user: clients ( id, name, email, phone, last_contact ),
+            property: properties ( id, name, address, status, price, beds, baths, sqft )
+          `).order('created_at', { ascending: false }).limit(5)
+        ]);
 
-      if (salesData.error || leadsData.error || soldPropertiesData.error || activePropertiesData.error || recentListingsData.error) {
-        console.error("Error fetching dashboard data:", {
-          sales: salesData.error,
-          leads: leadsData.error,
-          sold: soldPropertiesData.error,
-          active: activePropertiesData.error,
-          listings: recentListingsData.error
-        });
-      } else {
-        const totalSales = salesData.data?.reduce((sum, prop) => sum + prop.price, 0) || 0;
-        setStats({
-          totalSales,
-          newLeadsCount: leadsData.count || 0,
-          soldPropertiesCount: soldPropertiesData.count || 0,
-          activePropertiesCount: activePropertiesData.count || 0,
-        });
-        setRecentListings(recentListingsData.data as Property[]);
+        if (salesError || leadsError || soldError || activeError || listingsError || activityError) {
+          console.error('Error fetching dashboard data:', {
+            sales: salesError,
+            leads: leadsError,
+            sold: soldError,
+            active: activeError,
+            listings: listingsError,
+            activity: activityError
+          });
+          setError('Erro ao carregar dados do dashboard');
+        } else {
+          const totalSales = salesData?.reduce((sum, prop) => sum + prop.price, 0) || 0;
+          setStats({
+            totalSales,
+            newLeadsCount: leadsData?.count || 0,
+            soldPropertiesCount: soldPropertiesData?.count || 0,
+            activePropertiesCount: activePropertiesData?.count || 0,
+          });
+          setRecentListings(recentListingsData as Property[]);
+          setRecentActivity(activityData as any[]);
+        }
+      } catch (error) {
+        console.error('Error in fetchDashboardData:', error);
+        setError('Erro inesperado ao carregar dados do dashboard');
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     fetchDashboardData();
@@ -68,7 +134,7 @@ const Dashboard: React.FC = () => {
 
   const formatCurrency = (value: number) => {
     if (value >= 1_000_000) {
-      return `R$${(value / 1_000_000).toFixed(1).replace('.', ',')}M`;
+      return `R$${Math.floor(value / 1_000_000)}M`;
     }
     if (value >= 1_000) {
       return `R$${Math.floor(value / 1_000)}k`;
@@ -78,73 +144,153 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-full">
-        <LoaderCircle className="w-12 h-12 text-brand-cta animate-spin" />
-      </div>
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 8 }}>
+        <Alert severity="error">
+          {error}
+        </Alert>
+      </Container>
     );
   }
 
   return (
-    <div className="container mx-auto">
-      {/* Botão para criar dados de exemplo */}
-      <CreateSampleDataButton />
-      
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DashboardCard
-          title="Vendas Totais (Ano)"
-          value={formatCurrency(stats?.totalSales ?? 0)}
-          change="+12.5%"
-          icon={<LineChart className="w-8 h-8 text-brand-cta" />}
-          changeType="increase"
-        />
-        <DashboardCard
-          title="Novos Leads"
-          value={String(stats?.newLeadsCount ?? 0)}
-          change="+5.2%"
-          icon={<Users className="w-8 h-8 text-green-400" />}
-          changeType="increase"
-        />
-        <DashboardCard
-          title="Imóveis Vendidos"
-          value={String(stats?.soldPropertiesCount ?? 0)}
-          change="-2.1%"
-          icon={<Handshake className="w-8 h-8 text-amber-400" />}
-          changeType="decrease"
-        />
-        <DashboardCard
-          title="Imóveis Ativos"
-          value={String(stats?.activePropertiesCount ?? 0)}
-          change="+1.8%"
-          icon={<Home className="w-8 h-8 text-indigo-400" />}
-          changeType="increase"
-        />
-      </div>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Dashboard
+      </Typography>
 
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Sales Chart & Property Listings */}
-        <div className="lg:col-span-2 space-y-8">
-          <SalesChart />
-          <PropertyListings 
-            title="Imóveis Recentes" 
-            properties={recentListings} 
-            onView={setListingToView}
-          />
-        </div>
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Vendas Totais (Ano)
+              </Typography>
+              <Typography variant="h4">
+                {formatCurrency(stats?.totalSales ?? 0)}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Novos Leads
+              </Typography>
+              <Typography variant="h4">
+                {stats?.newLeadsCount ?? 0}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Imóveis Vendidos
+              </Typography>
+              <Typography variant="h4">
+                {stats?.soldPropertiesCount ?? 0}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom>
+                Imóveis Ativos
+              </Typography>
+              <Typography variant="h4">
+                {stats?.activePropertiesCount ?? 0}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-        {/* Right Column: Recent Activity */}
-        <div className="lg:col-span-1">
-          <RecentActivity />
-        </div>
-      </div>
-      
-      <ViewPropertyModal
-        isOpen={!!listingToView}
-        onClose={() => setListingToView(null)}
-        property={listingToView}
-      />
-    </div>
+      {/* Charts and Recent Activity */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} lg={8}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Performance de Vendas
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={recentListings}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="price" stroke="#8884d8" />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} lg={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Atividade Recente
+              </Typography>
+              <List dense>
+                {recentActivity.slice(0, 5).map((activity) => (
+                  <ListItem key={activity.id}>
+                    <ListItemText
+                      primary={`${activity.user}: ${activity.action}`}
+                      secondary={activity.timestamp}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Recent Listings */}
+      <Grid container spacing={3} sx={{ mt: 4 }}>
+        <Grid item xs={12}>
+          <Typography variant="h6" gutterBottom>
+            Imóveis Recentes
+          </Typography>
+          <Grid container spacing={2}>
+            {recentListings.map((property) => (
+              <Grid item xs={12} sm={6} md={4} key={property.id}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      {property.name || property.address}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {property.address}
+                    </Typography>
+                    <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
+                      R$ {property.price.toLocaleString('pt-BR')}
+                    </Typography>
+                    <Chip label={property.status} color="primary" size="small" sx={{ mt: 1 }} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 

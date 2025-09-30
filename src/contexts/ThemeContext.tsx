@@ -1,58 +1,68 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createTheme, ThemeProvider as MuiThemeProvider, Theme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
 interface ThemeContextType {
   theme: 'light' | 'dark';
   setTheme: (theme: 'light' | 'dark') => void;
   toggleTheme: () => void;
-  resolvedTheme: 'light' | 'dark';
+  muiTheme: Theme;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const lightTheme = createTheme({
+  palette: {
+    mode: 'light',
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+    background: {
+      default: '#f5f5f5',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#000000',
+      secondary: '#757575',
+    },
+  },
+});
+
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#90caf9',
+    },
+    secondary: {
+      main: '#f48fb1',
+    },
+    background: {
+      default: '#121212',
+      paper: '#1e1e1e',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+    },
+  },
+});
+
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
 
-  // Load theme from localStorage on mount
   useEffect(() => {
+    // Load theme from localStorage on mount
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (savedTheme) {
       setTheme(savedTheme);
-      setResolvedTheme(savedTheme);
     } else {
       // If no saved theme, use system preference
       const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const systemTheme = systemPrefersDark ? 'dark' : 'light';
-      setTheme(systemTheme);
-      setResolvedTheme(systemTheme);
-    }
-  }, []);
-
-  // Apply theme to document
-  useEffect(() => {
-    // Save theme to localStorage
-    localStorage.setItem('theme', theme);
-
-    // Apply theme class to root element
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    setResolvedTheme(theme);
-  }, [theme]);
-
-  // Listen to system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-    if (mediaQuery) {
-      const handleChange = (e: MediaQueryListEvent) => {
-        if (localStorage.getItem('theme') === null) { // Only if no user preference saved
-          setTheme(e.matches ? 'dark' : 'light');
-        }
-      };
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
+      setTheme(systemPrefersDark ? 'dark' : 'light');
     }
   }, []);
 
@@ -64,9 +74,19 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setTheme(newTheme);
   }, []);
 
+  const muiTheme = theme === 'dark' ? darkTheme : lightTheme;
+
+  // Save theme to localStorage
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme: setThemeDirect, toggleTheme, resolvedTheme }}>
-      {children}
+    <ThemeContext.Provider value={{ theme, setTheme: setThemeDirect, toggleTheme, muiTheme }}>
+      <MuiThemeProvider theme={muiTheme}>
+        <CssBaseline />
+        {children}
+      </MuiThemeProvider>
     </ThemeContext.Provider>
   );
 };

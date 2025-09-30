@@ -9,14 +9,14 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import PurchaseOrders from './pages/PurchaseOrders';
 import Login from './pages/Login';
-import { AuthProvider } from './contexts/AuthContext'; // Assuming you have an AuthContext
+import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <div className="min-h-screen bg-bg-primary text-text-primary">
+          <div className="min-h-screen">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/listings" element={<Listings />} />

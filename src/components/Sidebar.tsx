@@ -1,81 +1,110 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Box,
+  ListItemButtonProps,
+  SvgIconComponent
+} from '@mui/material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import HomeIcon from '@mui/icons-material/Home';
+import PeopleIcon from '@mui/icons-material/People';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+
+const drawerWidth = 240;
+
+interface SidebarItem {
+  label: string;
+  path: string;
+  icon: SvgIconComponent;
+}
+
+const sidebarItems: SidebarItem[] = [
+  { label: 'Dashboard', path: '/', icon: DashboardIcon },
+  { label: 'Imóveis', path: '/listings', icon: HomeIcon },
+  { label: 'Leads', path: '/leads', icon: PeopleIcon },
+  { label: 'Clientes', path: '/clients', icon: PeopleIcon },
+  { label: 'Ordens', path: '/purchase-orders', icon: BarChartIcon },
+  { label: 'Relatórios', path: '/reports', icon: BarChartIcon },
+  { label: 'Configurações', path: '/settings', icon: SettingsIcon },
+];
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   if (!user) return null;
 
+  const drawer = (
+    <Box sx={{ width: drawerWidth }}>
+      <List>
+        {sidebarItems.map((item) => (
+          <ListItem key={item.label} disablePadding>
+            <ListItemButton onClick={() => navigate(item.path)}>
+              <ListItemIcon>
+                <item.icon />
+              </ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Box sx={{ position: 'absolute', bottom: 0, width: '100%' }}>
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton onClick={signOut}>
+              <ListItemIcon>
+                <ExitToAppIcon />
+              </ListItemIcon>
+              <ListItemText primary="Sair" />
+            </ListItemButton>
+          </List>
+        </Box>
+      </Box>
+    );
+
   return (
-    <div className="fixed inset-y-0 left-0 w-64 bg-bg-primary border-r border-border z-50 transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 ease-in-out lg:ease-out">
-      <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-border">
-          <h2 className="text-xl font-bold text-text-primary">Menu</h2>
-        </div>
-        
-        <nav className="flex-1 p-4 space-y-2">
-          <button 
-            onClick={() => navigate('/')}
-            className="w-full text-left p-3 rounded-lg hover:bg-border transition-colors text-text-secondary hover:text-text-primary"
-          >
-            Dashboard
-          </button>
-          <button 
-            onClick={() => navigate('/listings')}
-            className="w-full text-left p-3 rounded-lg hover:bg-border transition-colors text-text-secondary hover:text-text-primary"
-          >
-            Imóveis
-          </button>
-          <button 
-            onClick={() => navigate('/leads')}
-            className="w-full text-left p-3 rounded-lg hover:bg-border transition-colors text-text-secondary hover:text-text-primary"
-          >
-            Leads
-          </button>
-          <button 
-            onClick={() => navigate('/clients')}
-            className="w-full text-left p-3 rounded-lg hover:bg-border transition-colors text-text-secondary hover:text-text-primary"
-          >
-            Clientes
-          </button>
-          <button 
-            onClick={() => navigate('/purchase-orders')}
-            className="w-full text-left p-3 rounded-lg hover:bg-border transition-colors text-text-secondary hover:text-text-primary"
-          >
-            Ordens de Compra
-          </button>
-          <button 
-            onClick={() => navigate('/reports')}
-            className="w-full text-left p-3 rounded-lg hover:bg-border transition-colors text-text-secondary hover:text-text-primary"
-          >
-            Relatórios
-          </button>
-          <button 
-            onClick={() => navigate('/settings')}
-            className="w-full text-left p-3 rounded-lg hover:bg-border transition-colors text-text-secondary hover:text-text-primary"
-          >
-            Configurações
-          </button>
-        </nav>
-        
-        <div className="p-4 border-t border-border">
-          <button 
-            onClick={signOut}
-            className="w-full bg-error text-bg-primary p-3 rounded-lg hover:bg-error/90 transition-colors"
-          >
-            Sair
-          </button>
-        </div>
-      </div>
-      
-      {/* Overlay for mobile */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-        onClick={() => {/* Close sidebar logic here */}}
-      />
-    </div>
+    <>
+      {/* Mobile drawer */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', lg: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+        }}
+      >
+        {drawer}
+      </Drawer>
+
+      {/* Desktop drawer */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', lg: 'block' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+        }}
+        open
+      >
+        {drawer}
+      </Drawer>
+    </>
   );
 };
 
